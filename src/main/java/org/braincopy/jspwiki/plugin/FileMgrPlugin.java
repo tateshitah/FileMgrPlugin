@@ -8,7 +8,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -21,7 +20,6 @@ import org.apache.wiki.WikiEngine;
 import org.apache.wiki.WikiPage;
 import org.apache.wiki.api.exceptions.PluginException;
 import org.apache.wiki.api.exceptions.ProviderException;
-import org.apache.wiki.api.exceptions.WikiException;
 import org.apache.wiki.api.plugin.WikiPlugin;
 import org.apache.wiki.attachment.Attachment;
 import org.apache.wiki.attachment.AttachmentManager;
@@ -40,60 +38,89 @@ public class FileMgrPlugin implements WikiPlugin {
 	 * java.util.Map)
 	 */
 	public String execute(WikiContext context, Map<String, String> arg1) throws PluginException {
-		String result = "Execute result:<br>";
+		String result = "Execute result 0.3.3:<br>";
 		WikiEngine engine = context.getEngine();
 
-		String[] keywords = new String[2];
-		keywords[0] = "http://image02.wiki.livedoor.jp/h/3/hirotate1103/";
-		keywords[1] = "http://image01.wiki.livedoor.jp/h/3/hirotate1103/";
+		// for picture replacement
+		// String[] keywords = new String[2];
+		// keywords[0] = "http://image02.wiki.livedoor.jp/h/3/hirotate1103/";
+		// keywords[1] = "http://image01.wiki.livedoor.jp/h/3/hirotate1103/";
+
+		String[] keywords = new String[1];
+		keywords[0] = "[{PageViewPlugin";
+		int count = 0;
 
 		PageManager manager = engine.getPageManager();
-		Iterator<WikiPage> pageListIte = null;
-		WikiPage currentPage = null;
-		String pureText = null;
 		try {
 			Collection<WikiPage> allPageList = manager.getAllPages();
-			pageListIte = allPageList.iterator();
-			String picURL = "";
-			String picFileName = "";
-			String[] tempStrArray = null;
-			while (pageListIte.hasNext()) {
-				currentPage = pageListIte.next();
+			for (WikiPage currentPage : allPageList) {
 				result += currentPage.getName() + " will be checked<br>";
-				pureText = engine.getPureText(currentPage);
-				if (pureText.contains(keywords[0]) || pureText.contains(keywords[1])) {
-					while (pureText.contains(keywords[0])) {
-						picURL = pureText.substring(pureText.indexOf(keywords[0]));
-						picURL = picURL.substring(0, picURL.indexOf("'"));
-						tempStrArray = picURL.split("/");
-						picFileName = tempStrArray[tempStrArray.length - 1];
-						pureText = pureText.replace(picURL, picFileName);
-						getAndSavePic(engine, currentPage, picURL, picFileName);
-						// result += currentPage.getName() + "has link(s) to image: " + picURL + "
-						// <br>";
-					}
-					while (pureText.contains(keywords[1])) {
-						picURL = pureText.substring(pureText.indexOf(keywords[1]));
-						picURL = picURL.substring(0, picURL.indexOf("'"));
-						tempStrArray = picURL.split("/");
-						picFileName = tempStrArray[tempStrArray.length - 1];
-						pureText = pureText.replace(picURL, picFileName);
-						getAndSavePic(engine, currentPage, picURL, picFileName);
-						// result += currentPage.getName() + "has link(s) to image: " + picURL + "
-						// <br>";
-					}
-					manager.putPageText(currentPage, pureText);
-					// engine.saveText(context, pureText);
-				}
+				// keywordReplace(keywords, engine, currentPage, manager);
+				// result += addPageViewPlugin(keywords, engine, currentPage, manager);
+				result += checkPageViewPlugin(keywords, engine, currentPage, count);
 			}
+			result += count + "/" + allPageList.size() + " pages do not have the plugin.\n\r";
 		} catch (ProviderException e1) {
 			e1.printStackTrace();
-		} catch (WikiException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 
 		return result;
+	}
+
+	private String checkPageViewPlugin(String[] keywords, WikiEngine engine, WikiPage currentPage, int count) {
+		String result = "";
+		String pureText = engine.getPureText(currentPage);
+		if (!pureText.contains(keywords[0])) {
+			result = "hey " + currentPage.getName() + " does not have PageViewPlugin!\n\r";
+			count++;
+		}
+		return result;
+	}
+
+	protected String addPageViewPlugin(String[] keywords, WikiEngine engine, WikiPage currentPage, PageManager manager)
+			throws ProviderException {
+		String result = "";
+		String pureText = engine.getPureText(currentPage);
+		if (!pureText.contains(keywords[0])) {
+			pureText = "[{PageViewPlugin}]\r\n" + pureText;
+			manager.putPageText(currentPage, pureText);
+			result += "PageViewPlugin was added " + currentPage.getName() + " for page view statics\r\n";
+		}
+		return result;
+	}
+
+	protected void keywordReplace(String[] keywords, WikiEngine engine, WikiPage currentPage, PageManager manager)
+			throws ProviderException {
+		String pureText = null;
+		String picURL = null;
+		String[] tempStrArray = null;
+		String picFileName = null;
+		pureText = engine.getPureText(currentPage);
+		if (pureText.contains(keywords[0]) || pureText.contains(keywords[1])) {
+			while (pureText.contains(keywords[0])) {
+				picURL = pureText.substring(pureText.indexOf(keywords[0]));
+				picURL = picURL.substring(0, picURL.indexOf("'"));
+				tempStrArray = picURL.split("/");
+				picFileName = tempStrArray[tempStrArray.length - 1];
+				pureText = pureText.replace(picURL, picFileName);
+				getAndSavePic(engine, currentPage, picURL, picFileName);
+				// result += currentPage.getName() + "has link(s) to image: " + picURL + "
+				// <br>";
+			}
+			while (pureText.contains(keywords[1])) {
+				picURL = pureText.substring(pureText.indexOf(keywords[1]));
+				picURL = picURL.substring(0, picURL.indexOf("'"));
+				tempStrArray = picURL.split("/");
+				picFileName = tempStrArray[tempStrArray.length - 1];
+				pureText = pureText.replace(picURL, picFileName);
+				getAndSavePic(engine, currentPage, picURL, picFileName);
+				// result += currentPage.getName() + "has link(s) to image: " + picURL + "
+				// <br>";
+			}
+			manager.putPageText(currentPage, pureText);
+			// engine.saveText(context, pureText);
+		}
+
 	}
 
 	/**

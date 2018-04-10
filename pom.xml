@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.braincopy.jspwiki.plugin</groupId>
 	<artifactId>FileMgrPlugin</artifactId>
-	<version>0.2.7</version>
+	<version>0.3.3</version>
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
