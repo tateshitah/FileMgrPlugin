@@ -48,18 +48,18 @@ public class FileMgrPlugin implements WikiPlugin {
 
 		String[] keywords = new String[1];
 		keywords[0] = "[{PageViewPlugin";
-		int count = 0;
+		Integer count = 1;
 
 		PageManager manager = engine.getPageManager();
 		try {
 			Collection<WikiPage> allPageList = manager.getAllPages();
 			for (WikiPage currentPage : allPageList) {
-				result += currentPage.getName() + " will be checked<br>";
+				// result += currentPage.getName() + " will be checked<br>";
 				// keywordReplace(keywords, engine, currentPage, manager);
 				// result += addPageViewPlugin(keywords, engine, currentPage, manager);
 				result += checkPageViewPlugin(keywords, engine, currentPage, count);
 			}
-			result += count + "/" + allPageList.size() + " pages do not have the plugin.\n\r";
+			result += count + "/" + allPageList.size() + " pages do not have the plugin.<BR>";
 		} catch (ProviderException e1) {
 			e1.printStackTrace();
 		}
@@ -67,7 +67,7 @@ public class FileMgrPlugin implements WikiPlugin {
 		return result;
 	}
 
-	private String checkPageViewPlugin(String[] keywords, WikiEngine engine, WikiPage currentPage, int count) {
+	private String checkPageViewPlugin(String[] keywords, WikiEngine engine, WikiPage currentPage, Integer count) {
 		String result = "";
 		String pureText = engine.getPureText(currentPage);
 		if (!pureText.contains(keywords[0])) {
